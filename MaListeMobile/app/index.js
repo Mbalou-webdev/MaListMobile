@@ -1,188 +1,432 @@
-import React, { useState, useEffect } from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AntDesign, Feather } from "@expo/vector-icons";
+// import React, { useState, useEffect } from "react";
+// import {
+//   StyleSheet,
+//   Text,
+//   TextInput,
+//   View,
+//   FlatList,
+//   TouchableOpacity,
+//   Alert,
+// } from "react-native";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { AntDesign, Feather } from "@expo/vector-icons";
 
-export default function App() {
-  const [task, setTask] = useState("");
-  const [tasks, setTasks] = useState([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentTaskId, setCurrentTaskId] = useState(null);
+// export default function App() {
+//   const [task, setTask] = useState("");
+//   const [tasks, setTasks] = useState([]);
+//   const [editingTaskId, setEditingTaskId] = useState(null);
 
-  const TASKS_KEY = "@tasks_list";
+//   useEffect(() => {
+//     loadTasks();
+//   }, []);
 
-  useEffect(() => {
-    loadTasks();
-  }, []);
+//   useEffect(() => {
+//     saveTasks();
+//   }, [tasks]);
 
-  const loadTasks = async () => {
-    try {
-      const savedTasks = await AsyncStorage.getItem(TASKS_KEY);
-      if (savedTasks !== null) {
-        setTasks(JSON.parse(savedTasks));
-      }
-    } catch (error) {
-      console.error("Erreur de chargement :", error);
-    }
-  };
+//   const loadTasks = async () => {
+//     try {
+//       const storedTasks = await AsyncStorage.getItem("tasks");
+//       if (storedTasks) {
+//         setTasks(JSON.parse(storedTasks));
+//       }
+//     } catch (error) {
+//       Alert.alert("Erreur", "Impossible de charger les tâches.");
+//     }
+//   };
 
-  const saveTasks = async (newTasks) => {
-    try {
-      await AsyncStorage.setItem(TASKS_KEY, JSON.stringify(newTasks));
-    } catch (error) {
-      console.error("Erreur de sauvegarde :", error);
-    }
-  };
+//   const saveTasks = async () => {
+//     try {
+//       await AsyncStorage.setItem("tasks", JSON.stringify(tasks));
+//     } catch (error) {
+//       Alert.alert("Erreur", "Impossible d'enregistrer les tâches.");
+//     }
+//   };
 
-  const handleAddOrEditTask = () => {
-    if (task.trim() === "") {
-      Alert.alert("Erreur", "Veuillez entrer une tâche.");
-      return;
-    }
+//   const addTask = () => {
+//     if (!task.trim()) return;
 
-    if (isEditing) {
-      const updatedTasks = tasks.map((item) =>
-        item.id === currentTaskId ? { ...item, text: task } : item
-      );
-      setTasks(updatedTasks);
-      saveTasks(updatedTasks);
-      setIsEditing(false);
-      setCurrentTaskId(null);
-    } else {
-      const newTask = { id: Date.now().toString(), text: task };
-      const newTasksList = [...tasks, newTask];
-      setTasks(newTasksList);
-      saveTasks(newTasksList);
-    }
+//     if (editingTaskId !== null) {
+//       const updatedTasks = tasks.map((t) =>
+//         t.id === editingTaskId ? { ...t, text: task } : t
+//       );
+//       setTasks(updatedTasks);
+//       setEditingTaskId(null);
+//     } else {
+//       const newTask = {
+//         id: Date.now().toString(),
+//         text: task,
+//         done: false,
+//       };
+//       setTasks([...tasks, newTask]);
+//     }
 
-    setTask("");
-  };
+//     setTask("");
+//   };
 
-  const deleteTask = (id) => {
-    Alert.alert("Confirmer", "Supprimer cette tâche ?", [
-      { text: "Annuler" },
-      {
-        text: "Supprimer",
-        style: "destructive",
-        onPress: () => {
-          const updatedTasks = tasks.filter((item) => item.id !== id);
-          setTasks(updatedTasks);
-          saveTasks(updatedTasks);
-        },
-      },
-    ]);
-  };
+//   const deleteTask = (id) => {
+//     Alert.alert("Supprimer", "Voulez-vous supprimer cette tâche ?", [
+//       { text: "Annuler" },
+//       {
+//         text: "Supprimer",
+//         onPress: () => setTasks(tasks.filter((t) => t.id !== id)),
+//         style: "destructive",
+//       },
+//     ]);
+//   };
 
-  const editTask = (id, text) => {
-    setTask(text);
-    setIsEditing(true);
-    setCurrentTaskId(id);
-  };
+//   const toggleDone = (id) => {
+//     const updatedTasks = tasks.map((t) =>
+//       t.id === id ? { ...t, done: !t.done } : t
+//     );
+//     setTasks(updatedTasks);
+//   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>📝 MaListe Mobile</Text>
+//   const editTask = (task) => {
+//     setTask(task.text);
+//     setEditingTaskId(task.id);
+//   };
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Écris ta tâche ici..."
-          value={task}
-          onChangeText={setTask}
-        />
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleAddOrEditTask}
-        >
-          <AntDesign name={isEditing ? "edit" : "plus"} size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+//   const renderItem = ({ item }) => (
+//     <View style={styles.taskItem}>
+//       <TouchableOpacity onPress={() => toggleDone(item.id)}>
+//         <AntDesign
+//           name={item.done ? "checkcircle" : "checkcircleo"}
+//           size={24}
+//           color={item.done ? "green" : "gray"}
+//         />
+//       </TouchableOpacity>
 
-      <FlatList
-        data={tasks}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.taskItem}>
-            <Text style={styles.taskText}>{item.text}</Text>
+//       <Text style={[styles.taskText, item.done && styles.taskDone]}>
+//         {item.text}
+//       </Text>
 
-            <View style={styles.icons}>
-              <TouchableOpacity onPress={() => editTask(item.id, item.text)}>
-                <Feather name="edit" size={20} color="#4caf50" />
-              </TouchableOpacity>
+//       <View style={styles.actions}>
+//         <TouchableOpacity onPress={() => editTask(item)} style={styles.icon}>
+//           <Feather name="edit-2" size={20} color="#2196f3" />
+//         </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => deleteTask(item.id)}>
-                <Feather name="trash-2" size={20} color="#f44336" style={{ marginLeft: 10 }} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      />
-    </View>
-  );
-}
+//         <TouchableOpacity onPress={() => deleteTask(item.id)} style={styles.icon}>
+//           <Feather name="trash-2" size={20} color="#f44336" />
+//         </TouchableOpacity>
+//       </View>
+//     </View>
+//   );
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9fafb",
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#333",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    marginBottom: 20,
-  },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  addButton: {
-    backgroundColor: "#4caf50",
-    padding: 12,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  taskItem: {
-    backgroundColor: "#fff",
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  taskText: {
-    fontSize: 18,
-    flex: 1,
-    color: "#333",
-  },
-  icons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-});
+//   return (
+//     <View style={styles.container}>
+//       <Text style={styles.title}>Ma Liste de Tâches 📝</Text>
+
+//       <View style={styles.inputContainer}>
+//         <TextInput
+//           style={styles.input}
+//           placeholder={editingTaskId ? "Modifier la tâche..." : "Ajouter une tâche"}
+//           value={task}
+//           onChangeText={setTask}
+//         />
+
+//         {editingTaskId ? (
+//           <>
+//             <TouchableOpacity onPress={addTask} style={styles.iconButton}>
+//               <Feather name="check" size={24} color="#fff" />
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               onPress={() => {
+//                 setEditingTaskId(null);
+//                 setTask("");
+//               }}
+//               style={[styles.iconButton, { backgroundColor: "#f44336" }]}
+//             >
+//               <Feather name="x" size={24} color="#fff" />
+//             </TouchableOpacity>
+//           </>
+//         ) : (
+//           <TouchableOpacity onPress={addTask} style={styles.iconButton}>
+//             <Feather name="plus" size={24} color="#fff" />
+//           </TouchableOpacity>
+//         )}
+//       </View>
+
+//       <FlatList
+//         data={tasks}
+//         keyExtractor={(item) => item.id}
+//         renderItem={renderItem}
+//         contentContainerStyle={{ paddingBottom: 100 }}
+//       />
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#f5f5f5",
+//     paddingTop: 60,
+//     paddingHorizontal: 20,
+//   },
+//   title: {
+//     fontSize: 24,
+//     fontWeight: "bold",
+//     marginBottom: 20,
+//     textAlign: "center",
+//   },
+//   inputContainer: {
+//     flexDirection: "row",
+//     marginBottom: 20,
+//     alignItems: "center",
+//   },
+//   input: {
+//     flex: 1,
+//     backgroundColor: "#fff",
+//     padding: 10,
+//     borderRadius: 6,
+//     borderColor: "#ddd",
+//     borderWidth: 1,
+//   },
+//   iconButton: {
+//     backgroundColor: "#2196f3",
+//     padding: 10,
+//     borderRadius: 6,
+//     marginLeft: 5,
+//   },
+//   taskItem: {
+//     flexDirection: "row",
+//     backgroundColor: "#fff",
+//     padding: 15,
+//     borderRadius: 6,
+//     marginBottom: 10,
+//     alignItems: "center",
+//   },
+//   taskText: {
+//     flex: 1,
+//     marginLeft: 10,
+//     fontSize: 16,
+//   },
+//   taskDone: {
+//     textDecorationLine: "line-through",
+//     color: "gray",
+//   },
+//   actions: {
+//     flexDirection: "row",
+//     marginLeft: 10,
+//   },
+//   icon: {
+//     marginLeft: 10,
+//   },
+// });
+// import React, { useState, useEffect } from "react";
+// import {
+//   StyleSheet,
+//   Text,
+//   TextInput,
+//   View,
+//   FlatList,
+//   TouchableOpacity,
+//   Alert,
+// } from "react-native";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { AntDesign, Feather } from "@expo/vector-icons";
+
+// export default function App() {
+//   const [task, setTask] = useState("");
+//   const [tasks, setTasks] = useState([]);
+//   const [editingTaskId, setEditingTaskId] = useState(null);
+
+//   useEffect(() => {
+//     loadTasks();
+//   }, []);
+
+//   useEffect(() => {
+//     saveTasks();
+//   }, [tasks]);
+
+//   const loadTasks = async () => {
+//     try {
+//       const storedTasks = await AsyncStorage.getItem("tasks");
+//       if (storedTasks) {
+//         setTasks(JSON.parse(storedTasks));
+//       }
+//     } catch (error) {
+//       Alert.alert("Erreur", "Impossible de charger les tâches.");
+//     }
+//   };
+
+//   const saveTasks = async () => {
+//     try {
+//       await AsyncStorage.setItem("tasks", JSON.stringify(tasks));
+//     } catch (error) {
+//       Alert.alert("Erreur", "Impossible d'enregistrer les tâches.");
+//     }
+//   };
+
+//   const addTask = () => {
+//     if (!task.trim()) return;
+
+//     if (editingTaskId !== null) {
+//       const updatedTasks = tasks.map((t) =>
+//         t.id === editingTaskId ? { ...t, text: task } : t
+//       );
+//       setTasks(updatedTasks);
+//       setEditingTaskId(null);
+//     } else {
+//       const newTask = {
+//         id: Date.now().toString(),
+//         text: task,
+//         done: false,
+//       };
+//       setTasks([...tasks, newTask]);
+//     }
+
+//     setTask("");
+//   };
+
+//   const deleteTask = (id) => {
+//     Alert.alert("Supprimer", "Voulez-vous supprimer cette tâche ?", [
+//       { text: "Annuler" },
+//       {
+//         text: "Supprimer",
+//         onPress: () => setTasks(tasks.filter((t) => t.id !== id)),
+//         style: "destructive",
+//       },
+//     ]);
+//   };
+
+//   const toggleDone = (id) => {
+//     const updatedTasks = tasks.map((t) =>
+//       t.id === id ? { ...t, done: !t.done } : t
+//     );
+//     setTasks(updatedTasks);
+//   };
+
+//   const editTask = (task) => {
+//     setTask(task.text);
+//     setEditingTaskId(task.id);
+//   };
+
+//   const renderItem = ({ item }) => (
+//     <View style={styles.taskItem}>
+//       <TouchableOpacity onPress={() => toggleDone(item.id)}>
+//         <AntDesign
+//           name={item.done ? "checkcircle" : "checkcircleo"}
+//           size={24}
+//           color={item.done ? "green" : "gray"}
+//         />
+//       </TouchableOpacity>
+
+//       <Text style={[styles.taskText, item.done && styles.taskDone]}>
+//         {item.text}
+//       </Text>
+
+//       <View style={styles.actions}>
+//         <TouchableOpacity onPress={() => editTask(item)} style={styles.icon}>
+//           <Feather name="edit-2" size={20} color="#2196f3" />
+//         </TouchableOpacity>
+
+//         <TouchableOpacity onPress={() => deleteTask(item.id)} style={styles.icon}>
+//           <Feather name="trash-2" size={20} color="#f44336" />
+//         </TouchableOpacity>
+//       </View>
+//     </View>
+//   );
+
+//   return (
+//     <View style={styles.container}>
+//       <Text style={styles.title}>Ma Liste de Tâches 📝</Text>
+
+//       <View style={styles.inputContainer}>
+//         <TextInput
+//           style={styles.input}
+//           placeholder={editingTaskId ? "Modifier la tâche..." : "Ajouter une tâche"}
+//           value={task}
+//           onChangeText={setTask}
+//         />
+
+//         {editingTaskId ? (
+//           <>
+//             <TouchableOpacity onPress={addTask} style={styles.iconButton}>
+//               <Feather name="check" size={24} color="#fff" />
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               onPress={() => {
+//                 setEditingTaskId(null);
+//                 setTask("");
+//               }}
+//               style={[styles.iconButton, { backgroundColor: "#f44336" }]}
+//             >
+//               <Feather name="x" size={24} color="#fff" />
+//             </TouchableOpacity>
+//           </>
+//         ) : (
+//           <TouchableOpacity onPress={addTask} style={styles.iconButton}>
+//             <Feather name="plus" size={24} color="#fff" />
+//           </TouchableOpacity>
+//         )}
+//       </View>
+
+//       <FlatList
+//         data={tasks}
+//         keyExtractor={(item) => item.id}
+//         renderItem={renderItem}
+//         contentContainerStyle={{ paddingBottom: 100 }}
+//       />
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#f5f5f5",
+//     paddingTop: 60,
+//     paddingHorizontal: 20,
+//   },
+//   title: {
+//     fontSize: 24,
+//     fontWeight: "bold",
+//     marginBottom: 20,
+//     textAlign: "center",
+//   },
+//   inputContainer: {
+//     flexDirection: "row",
+//     marginBottom: 20,
+//     alignItems: "center",
+//   },
+//   input: {
+//     flex: 1,
+//     backgroundColor: "#fff",
+//     padding: 10,
+//     borderRadius: 6,
+//     borderColor: "#ddd",
+//     borderWidth: 1,
+//   },
+//   iconButton: {
+//     backgroundColor: "#2196f3",
+//     padding: 10,
+//     borderRadius: 6,
+//     marginLeft: 5,
+//   },
+//   taskItem: {
+//     flexDirection: "row",
+//     backgroundColor: "#fff",
+//     padding: 15,
+//     borderRadius: 6,
+//     marginBottom: 10,
+//     alignItems: "center",
+//   },
+//   taskText: {
+//     flex: 1,
+//     marginLeft: 10,
+//     fontSize: 16,
+//   },
+//   taskDone: {
+//     textDecorationLine: "line-through",
+//     color: "gray",
+//   },
+//   actions: {
+//     flexDirection: "row",
+//     marginLeft: 10,
+//   },
+//   icon: {
+//     marginLeft: 10,
+//   },
+// });
